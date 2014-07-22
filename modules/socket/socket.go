@@ -157,7 +157,9 @@ func (self *Server) read(connection net.Conn) {
 		if self.OnDisconnected != nil {
 			self.OnDisconnected(connection)
 		}
-		connection.Close()
+		if connection != nil {
+			connection.Close()
+		}
 	}()
 
 	isHeadLoaded := false
