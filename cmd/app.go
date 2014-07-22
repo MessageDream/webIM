@@ -20,6 +20,9 @@ import (
 	"github.com/MessageDream/webIM/routers/app"
 	"github.com/MessageDream/webIM/routers/chat/longpolling"
 	"github.com/MessageDream/webIM/routers/chat/websocket"
+
+	"github.com/MessageDream/webIM/modules/socket"
+	soc "github.com/MessageDream/webIM/routers/chat/socket"
 )
 
 var CmdApp = cli.Command{
@@ -101,20 +104,6 @@ func runApp(*cli.Context) {
 	//	})
 	//})
 
-	//m := martini.Classic()
-	//	m.Get("/", &controllers.AppController{})
-	//	// Indicate AppController.Join method to handle POST requests.
-	//	m.Post("/join", &controllers.AppController{}, "post:Join")
-
-	//	// Long polling.
-	//	m.Get("/lp", &controllers.LongPollingController{}, "get:Join")
-	//	m.Post("/lp/post", &controllers.LongPollingController{})
-	//	m.Post("/lp/fetch", &controllers.LongPollingController{}, "get:Fetch")
-
-	//	// WebSocket.
-	//	m.Get("/ws", &controllers.WebSocketController{})
-	//	m.Get("/ws/join", &controllers.WebSocketController{}, "get:Join")
-
 	m.Get("/", app.Welcome)
 	m.Post("/join", app.Join)
 
@@ -128,7 +117,7 @@ func runApp(*cli.Context) {
 	m.Get("/ws/join", websocket.Join)
 	//Not found handler.
 	m.NotFound(routers.NotFound)
-
+	go runSocketServer()
 	var err error
 	listenAddr := fmt.Sprintf("%s:%s", setting.HttpAddr, setting.HttpPort)
 	log.Info("Listen: %v://%s", setting.Protocol, listenAddr)
@@ -144,4 +133,17 @@ func runApp(*cli.Context) {
 	if err != nil {
 		log.Fatal("Fail to start server: %v", err)
 	}
+}
+
+func runSocketServer() {
+	server := socket.NewServer()
+
+	listenAddr := fmt.Sprintf("%s:%s", setting.HttpAddr, setting.TcpPort)
+	log.Info("Socket listen:%s", listenAddr)
+	server.ListenTCP(listenAddr)
+	server.OnConnected = soc.OnConnected
+	server.OnMessage = soc.OnMessage
+	server.OnDisconnected = soc.OnDisconnected
+	server.Boot()
+	server.Wait()
 }

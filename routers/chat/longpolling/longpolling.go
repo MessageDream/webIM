@@ -28,12 +28,12 @@ func Join(ctx *middleware.Context) {
 	if chat.CheckRoom(roomid) {
 		room = chat.GetRoom(roomid)
 	} else {
-		//检查roomid格式并生成room
+		//Check roomid and then create room
 		//check
 		room = chat.NewChatRoom(roomid)
 	}
 
-	room.Join(uname, nil)
+	room.Join(uname, nil, nil)
 	// Join chat room.
 	//	chat.Join(uname, nil)
 
@@ -54,7 +54,7 @@ func Post(ctx *middleware.Context) {
 	}
 	if chat.CheckRoom(roomid) {
 		room := chat.GetRoom(roomid)
-		room.EnPublish(chat.NewEvent(models.EVENT_MESSAGE, models.User{Name: uname}, content))
+		room.EnPublish(chat.NewEvent(models.EVENT_MESSAGE, models.User{Name: uname}, content, roomid))
 	} else {
 		log.Warn("There is no room's id is %s", roomid)
 	}

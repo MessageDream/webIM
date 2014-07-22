@@ -28,10 +28,10 @@ var (
 	AppLogo string
 	AppUrl  string
 
-	Protocol           Scheme
-	Domain             string
-	HttpAddr, HttpPort string
-	CertFile, KeyFile  string
+	Protocol                    Scheme
+	Domain                      string
+	HttpAddr, HttpPort, TcpPort string
+	CertFile, KeyFile           string
 
 	LogRootPath      string
 	LogModes         []string
@@ -100,6 +100,7 @@ func NewConfigContext() {
 
 	HttpAddr = Cfg.MustValue("server", "HTTP_ADDR", "0.0.0.0")
 	HttpPort = Cfg.MustValue("server", "HTTP_PORT", "3000")
+	TcpPort = Cfg.MustValue("server", "TCP_PORT", "3001")
 
 	DisableRouterLog = Cfg.MustBool("server", "DISABLE_ROUTER_LOG")
 	StaticRootPath = Cfg.MustValue("server", "STATIC_ROOT_PATH", workDir)

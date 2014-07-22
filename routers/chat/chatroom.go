@@ -3,6 +3,7 @@ package chat
 import (
 	"container/list"
 	"encoding/json"
+	"net"
 	"time"
 
 	"github.com/MessageDream/webIM/models"
@@ -20,8 +21,9 @@ type Subscription struct {
 }
 
 type Subscriber struct {
-	Name string
-	Conn *websocket.Conn // Only for WebSocket users; otherwise nil.
+	Name       string
+	Conn       *websocket.Conn // Only for WebSocket users; otherwise nil.
+	SocketConn net.Conn
 }
 
 type ChatRoom struct {
@@ -38,8 +40,8 @@ type ChatRoom struct {
 	subscribers *list.List
 }
 
-func (this *ChatRoom) Join(user string, ws *websocket.Conn) {
-	this.subscribe <- Subscriber{Name: user, Conn: ws}
+func (this *ChatRoom) Join(user string, ws *websocket.Conn, socketConn net.Conn) {
+	this.subscribe <- Subscriber{Name: user, Conn: ws, SocketConn: socketConn}
 }
 
 func (this *ChatRoom) Leave(user string) {
@@ -70,20 +72,22 @@ func (this *ChatRoom) chatroom() {
 			if !isUserExist(this.subscribers, sub.Name) {
 				this.subscribers.PushBack(sub) // Add user to the end of list.
 				// Publish a JOIN event.
-				this.publish <- newEvent(models.EVENT_JOIN, models.User{Name: sub.Name}, "")
+				this.publish <- newEvent(models.EVENT_JOIN, models.User{Name: sub.Name}, "", this.ID)
 				log.Info("New user:", sub.Name, ";WebSocket:", sub.Conn != nil)
+				log.Info("New user:", sub.Name, ";Socket:", sub.SocketConn != nil)
 			} else {
 				log.Info("Old user:", sub.Name, ";WebSocket:", sub.Conn != nil)
+				log.Info("Old user:", sub.Name, ";Socket:", sub.SocketConn != nil)
 			}
 		case event := <-this.publish:
+			models.NewArchive(this.ID, event)
 			// Notify waiting list.
 			for ch := this.waitingList.Back(); ch != nil; ch = ch.Prev() {
 				ch.Value.(chan bool) <- true
 				this.waitingList.Remove(ch)
 			}
 
-			this.broadcastWebSocket(event)
-			models.NewArchive(this.ID, event)
+			this.broadcast(event)
 
 			if event.Type == models.EVENT_MESSAGE {
 				log.Info("Message from ", event.User.Name, ";Content:", event.Content)
@@ -98,7 +102,12 @@ func (this *ChatRoom) chatroom() {
 						ws.Close()
 						log.Error("WebSocket closed:", unsub)
 					}
-					this.publish <- newEvent(models.EVENT_LEAVE, models.User{Name: unsub}, "") // Publish a LEAVE event.
+					soc := sub.Value.(Subscriber).SocketConn
+					if soc != nil {
+						soc.Close()
+						log.Error("Socket closed:", unsub)
+					}
+					this.publish <- newEvent(models.EVENT_LEAVE, models.User{Name: unsub}, "", this.ID) // Publish a LEAVE event.
 					break
 				}
 			}
@@ -112,7 +121,7 @@ func (this *ChatRoom) chatroom() {
 	CloseRoom(this)
 }
 
-func (this *ChatRoom) broadcastWebSocket(event models.Event) {
+func (this *ChatRoom) broadcast(event models.Event) {
 	data, err := json.Marshal(event)
 	if err != nil {
 		log.Error("Fail to marshal event:", err)
@@ -121,13 +130,24 @@ func (this *ChatRoom) broadcastWebSocket(event models.Event) {
 
 	for sub := this.subscribers.Front(); sub != nil; sub = sub.Next() {
 		// Immediately send event to WebSocket users.
-		ws := sub.Value.(Subscriber).Conn
+		subs := sub.Value.(Subscriber)
+		ws := subs.Conn
 		if ws != nil {
 			if ws.WriteMessage(websocket.TextMessage, data) != nil {
 				// User disconnected.
 				this.unsubscribe <- sub.Value.(Subscriber).Name
 			}
+			continue
 		}
+		soc := subs.SocketConn
+		if soc != nil {
+			_, err := soc.Write([]byte(data))
+			if err != nil {
+				// User disconnected.
+				this.unsubscribe <- sub.Value.(Subscriber).Name
+			}
+		}
+
 	}
 }
 
@@ -155,12 +175,12 @@ func NewChatRoom(roomid string) *ChatRoom {
 	return room
 }
 
-func NewEvent(ep models.EventType, user models.User, msg string) models.Event {
-	return newEvent(ep, user, msg)
+func NewEvent(ep models.EventType, user models.User, msg, room string) models.Event {
+	return newEvent(ep, user, msg, room)
 }
 
-func newEvent(ep models.EventType, user models.User, msg string) models.Event {
-	return models.Event{ep, user, int(time.Now().Unix()), msg}
+func newEvent(ep models.EventType, user models.User, msg, room string) models.Event {
+	return models.Event{ep, user, int(time.Now().Unix()), msg, room}
 }
 
 func CheckRoom(roomid string) bool {

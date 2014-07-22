@@ -60,7 +60,7 @@ func Join(ctx *middleware.Context) {
 		room = chat.NewChatRoom(roomid)
 	}
 	// Join chat room.
-	room.Join(uname, ws)
+	room.Join(uname, ws, nil)
 	defer room.Leave(uname)
 
 	// Message receive loop.
@@ -70,6 +70,6 @@ func Join(ctx *middleware.Context) {
 			log.Error("%v", err)
 			return
 		}
-		room.EnPublish(chat.NewEvent(models.EVENT_MESSAGE, models.User{Name: uname}, string(p)))
+		room.EnPublish(chat.NewEvent(models.EVENT_MESSAGE, models.User{Name: uname}, string(p), roomid))
 	}
 }

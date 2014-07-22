@@ -25,6 +25,7 @@ type Event struct {
 	User      User
 	Timestamp int // Unix timestamp (secs)
 	Content   string
+	Room      string
 }
 
 const archiveSize = 20
