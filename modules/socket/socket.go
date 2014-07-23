@@ -153,13 +153,13 @@ func (self *Server) read(connection net.Conn) {
 
 	// close connection
 	defer func() {
-		self.wait.Done()
 		if self.OnDisconnected != nil {
 			self.OnDisconnected(connection)
 		}
 		if connection != nil {
 			connection.Close()
 		}
+		self.wait.Done()
 	}()
 
 	isHeadLoaded := false

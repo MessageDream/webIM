@@ -51,6 +51,9 @@ func OnConnected(conn net.Conn) {
 }
 
 func OnDisconnected(conn net.Conn) {
-	clientMap[conn].Room.Leave(clientMap[conn].UName)
-	delete(clientMap, conn)
+	client := clientMap[conn]
+	if client != nil && client.Room != nil {
+		client.Room.Leave(clientMap[conn].UName)
+		delete(clientMap, conn)
+	}
 }
