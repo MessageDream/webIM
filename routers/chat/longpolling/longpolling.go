@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	LONGPOLLING base.TplName = "chat/longpolling"
+	LONGPOLLING base.TplName = "chat/chat"
 )
 
 // Join method handles GET requests.
@@ -48,6 +48,7 @@ func Post(ctx *middleware.Context) {
 	uname := ctx.Query("uname")
 	roomid := ctx.Query("roomid")
 	content := ctx.Query("content")
+
 	if len(uname) == 0 || len(content) == 0 || len(roomid) == 0 {
 		log.Warn("%s", "One or more params are nil")
 		return
@@ -64,6 +65,7 @@ func Post(ctx *middleware.Context) {
 func Fetch(ctx *middleware.Context) {
 	lastReceived, err := strconv.Atoi(ctx.Query("lastReceived"))
 	roomid := ctx.Query("roomid")
+
 	if err != nil || len(roomid) == 0 {
 		return
 	}

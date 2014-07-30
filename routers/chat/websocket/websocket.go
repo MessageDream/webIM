@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	WEBSOCKET base.TplName = "chat/websocket"
+	WEBSOCKET base.TplName = "chat/chat"
 )
 
 // Get method handles GET requests for WebSocketController.
