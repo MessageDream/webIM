@@ -66,7 +66,7 @@ chatapp.controller('fetch', ['$scope','$interval','$http','$filter', function($s
     },3000);
 }]);
 
-chatapp.controller('websocket', ['$scope','$http','$filter', function ($scope,$http,$filter) {
+chatapp.controller('websocket', ['$scope','$http', function ($scope,$http) {
     $scope.send=function (){
         var content={
             uname:$scope.uname,
@@ -77,35 +77,38 @@ chatapp.controller('websocket', ['$scope','$http','$filter', function ($scope,$h
             $scope.msg='';
         });
     }; 
-    // Create a socket
-    socket = new WebSocket('ws://' + window.location.host + '/ws/join?uname=' + $('#uname').text()+"&roomid="+$('#roomid').text());
-    // Message received on the socket
-    socket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
-        if (data != null) {
-            $filter('orderBy')(data,'-Timestamp');
-            if(!$scope.data){
-                $scope.data=new Array();
+
+    angular.element(document).ready(function(){
+        // Create a socket
+        var socket = new WebSocket('ws://' + window.location.host + '/ws/join?uname=' + $scope.uname +"&roomid=" + $scope.roomid);
+        // Message received on the socket
+        socket.onmessage = function (event) {
+            var data = angular.fromJson(event.data);
+            if (data != null) {
+                if(!$scope.data){
+                    $scope.data=new Array();
+                }
+                switch (data.Type) {
+                    case 0: 
+                        if (data.User.Name == $scope.uname) {
+                            data.Content='You joined the chat room.';
+                        } else {
+                             data.Content=data.User.Name +' joined the chat room.';
+                        }
+                        data.User.Name='';
+                        break;
+                    case 1: 
+                        data.Content=data.User.Name +' left the chat room.';
+                        data.User.Name='';
+                        break;
+                    case 2: 
+                        data.User.Name =data.User.Name+':';
+                        break;
+                }
+                $scope.data.unshift(data);
+                $scope.$digest();
             }
-            switch (data.Type) {
-                case 0: 
-                    if (data.User.Name == $scope.uname) {
-                        data.Content='You joined the chat room.';
-                    } else {
-                         data.Content=data.User.Name +' joined the chat room.';
-                    }
-                    data.User.Name='';
-                    break;
-                case 1: 
-                    data.Content=data.User.Name +' left the chat room.';
-                    data.User.Name='';
-                    break;
-                case 2: 
-                    data.User.Name =data.User.Name+':';
-                    break;
-            }
-            $scope.data.unshift(data);
-        }
-    };
+        };
+    });
 }]);
                                                                                                            
