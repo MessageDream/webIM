@@ -1,0 +1,11 @@
+2014/07/31 10:23:58 [setting.go:175] [I] Log Mode: File(Trace)
+2014/07/31 10:23:58 [app.go:142] [I] Socket listen:127.0.0.1:3001
+2014/07/31 10:23:58 [app.go:123] [I] Listen: http://127.0.0.1:3000
+2014/07/31 10:24:41 [appindex.go:24] [W] Long Polling
+2014/07/31 10:24:41 [chatroom.go:76] [I] New user:%!(EXTRA string=123, string=;WebSocket:, bool=false)
+2014/07/31 10:24:41 [chatroom.go:77] [I] New user:%!(EXTRA string=123, string=;Socket:, bool=false)
+2014/07/31 10:25:53 [appindex.go:24] [W] WebSocket
+2014/07/31 10:25:54 [chatroom.go:76] [I] New user:%!(EXTRA string=11w, string=;WebSocket:, bool=true)
+2014/07/31 10:25:54 [chatroom.go:77] [I] New user:%!(EXTRA string=11w, string=;Socket:, bool=false)
+2014/07/31 10:25:59 [chatroom.go:93] [I] Message from %!(EXTRA string=11w, string=;Content:, string=hehehe)
+2014/07/31 10:26:09 [chatroom.go:93] [I] Message from %!(EXTRA string=123, string=;Content:, string=sb)

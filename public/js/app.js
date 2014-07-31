@@ -1,7 +1,6 @@
 var lastReceivedStamp = 0;
 var isWait = false;
-var chatapp=angular.module('chatapp',[]);
-chatapp.config (function($interpolateProvider,$httpProvider){
+var chatapp=angular.module('chatapp',[]).config (function($interpolateProvider,$httpProvider){
     $interpolateProvider.startSymbol('//');
     $interpolateProvider.endSymbol('//');
     $httpProvider.defaults.transformRequest=function(data){
@@ -14,9 +13,7 @@ chatapp.config (function($interpolateProvider,$httpProvider){
     $httpProvider.defaults.headers.post = {  
         'Content-Type': 'application/x-www-form-urlencoded'  
     };
-});
-
-chatapp.controller('fetch', ['$scope','$interval','$http','$filter', function($scope,$interval,$http,$filter){
+}).controller('fetch', ['$scope','$interval','$http','$filter', function($scope,$interval,$http,$filter){
     $scope.send=function (){
         var content={
             uname:$scope.uname,
@@ -64,9 +61,7 @@ chatapp.controller('fetch', ['$scope','$interval','$http','$filter', function($s
             isWait=false;
         });
     },3000);
-}]);
-
-chatapp.controller('websocket', ['$scope','$http', function ($scope,$http) {
+}]).controller('websocket', ['$scope','$http', function ($scope,$http) {
     $scope.send=function (){
         var content={
             uname:$scope.uname,
